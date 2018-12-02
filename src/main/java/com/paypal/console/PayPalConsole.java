@@ -1,5 +1,6 @@
 package com.paypal.console;
 
+import java.text.MessageFormat;
 import java.util.List;
 import java.util.Scanner;
 
@@ -10,12 +11,13 @@ public class PayPalConsole {
         System.out.println("Welcome to PayPal");
         System.out.println("Enter command");
         StringBuilder commandList = new StringBuilder(
-                    "(C) -> Create new user \n")
-                        .append("(L) -> List users \n")
-                        .append("(+) -> Cash in\n")
-                        .append("(-) -> Cash out\n")
-                        .append("(T) -> Transaction\n")
-                        .append("(Q) -> Quit\n");
+                "\n(C) -> Create new user \n")
+                .append("(L) -> List users \n")
+                .append("(+) -> Cash in\n")
+                .append("(-) -> Cash out\n")
+                .append("(T) -> Transaction\n")
+                .append("(B) -> Balance\n")
+                .append("(Q) -> Quit\n");
 
 
         while(true) {
@@ -27,7 +29,7 @@ public class PayPalConsole {
                     break;
 
                 case "L" :
-                    ListUsers();
+                    listUsers();
                     break;
 
                 case "+" :
@@ -39,7 +41,10 @@ public class PayPalConsole {
                     break;
 
                 case "T" :
-                    Transaction();
+                    transaction();
+                    break;
+                case "B" :
+                    balance();
                     break;
 
                 case "Q" :
@@ -54,7 +59,14 @@ public class PayPalConsole {
 
     }
 
-    private static void Transaction() {
+    private static void balance() {
+        int id = getIdFromConsole(null);
+        double balance  = DbHelper.balanceCheck(id);
+        String balanceView = MessageFormat.format("Balance of user {0}: {1}",id,balance);
+        System.out.println(balanceView);
+    }
+
+    private static void transaction() {
 
         int userFrom = getIdFromConsole("Take from");
         int userTo = getIdFromConsole("Give to");
@@ -71,7 +83,7 @@ public class PayPalConsole {
         DbHelper.cashOut(userId,amount);
     }
 
-    private static void ListUsers() {
+    private static void listUsers() {
 
         List<User> users = DbHelper.listUsers();
         if(users == null) return;
@@ -90,6 +102,7 @@ public class PayPalConsole {
         String lastName = scanner.nextLine();
 
         DbHelper.createUser(firstName,lastName);
+        System.out.println("User added: " + firstName + " " +lastName + ".");
 
     }
 
@@ -98,6 +111,7 @@ public class PayPalConsole {
         double amount = getAmountFromConsole();
 
         DbHelper.cashFlow(userId,amount);
+        System.out.println("Operation accepted");
     }
 
 

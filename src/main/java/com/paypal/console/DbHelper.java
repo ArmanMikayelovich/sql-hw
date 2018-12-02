@@ -64,17 +64,29 @@ public class DbHelper {
      */
     static void cashFlow(int userId, double amount) {
 
+//        if(idCheck(userId)) {
+//            try {
+//                Statement statement = connection.createStatement();
+//                String setBalanceQuery = MessageFormat.format(
+//                        "UPDATE users SET balance = (balance + {0}) where id = {1}; ", amount, userId);
+//                // System.out.println(setBalanceQuery);
+//                statement.execute(setBalanceQuery);
+//            } catch (SQLException e) {
+//                e.printStackTrace();
+//            }
+//        } else System.out.println("Uncorrect id!");
+//
         if(idCheck(userId)) {
             try {
-                Statement statement = connection.createStatement();
-                String setBalanceQuery = MessageFormat.format(
-                        "UPDATE users SET balance = (balance + {0}) where id = {1}; ", amount, userId);
-                // System.out.println(setBalanceQuery);
-                statement.execute(setBalanceQuery);
+                String setBalanceQuery = "UPDATE users SET balance  = (balance + ?) where id = ?;";
+                PreparedStatement statement = connection.prepareStatement(setBalanceQuery);
+                statement.setDouble(1,amount);
+                statement.setInt(2,userId);
+                statement.execute();
             } catch (SQLException e) {
                 e.printStackTrace();
             }
-        } else System.out.println("Uncorrect id!");;
+        } else System.out.println("Uncorrect id!");
 
     }
 
@@ -85,11 +97,13 @@ public class DbHelper {
                 return;
             }
                 try {
-                    Statement statement = connection.createStatement();
-                    String setBalanceQuery = MessageFormat.format(
-                            "UPDATE users SET balance = (balance - {0}) where id = {1}; ", amount, userId);
-                    // System.out.println(setBalanceQuery);
-                    statement.execute(setBalanceQuery);
+//
+                        String setBalanceQuery = "UPDATE users SET balance  = (balance - ?) WHERE id = ?;";
+                    PreparedStatement statement = connection.prepareStatement(setBalanceQuery);
+                    statement.setDouble(1,amount);
+                    statement.setInt(2,userId);
+
+                    statement.execute();
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
@@ -105,39 +119,73 @@ public class DbHelper {
      * @param amount    transaction amount
      */
     static void transaction(int userFrom, int userTo, double amount) {
+//        if(idCheck(userFrom) && idCheck(userTo)) {
+//            //TODO NISYA CHKA!!! XD :) :D
+//            //vercnel userFrom ic
+//            //tal userTO in
+//            //grel etqan@ transactions um
+//            if(amount > balanceCheck(userFrom)) {
+//                System.out.println("PARTQ MNAL CHKA XD");
+//                return;
+//            }
+//
+//            String takeFromQuery = MessageFormat.format(
+//                    "UPDATE users SET balance = (balance - {0}) where id = {1};",amount,userFrom);
+//            String giveToQuery = MessageFormat.format (
+//                    "UPDATE users SET balance = (balance + {0}) where id = {1};",amount,userTo);
+//            String writeTransactionQuery = MessageFormat.format(
+//                    "INSERT INTO transactions (user_from,user_to, transaction_amount) VALUES ({0},{1},{2});",userFrom,userTo,amount);
+//            System.out.println(takeFromQuery);
+//            System.out.println(giveToQuery);
+//            System.out.println(writeTransactionQuery);
+//
+//            try {
+//                Statement statement = connection.createStatement();
+//                statement.execute(takeFromQuery);
+//                statement.execute(giveToQuery);
+//                statement.execute(writeTransactionQuery);
+//
+//
+//            } catch (SQLException e){
+//                e.printStackTrace();
+//            }
+//
+//        }
+//        else System.out.println("Uncorrect id");
+
         if(idCheck(userFrom) && idCheck(userTo)) {
-            //TODO NISYA CHKA!!! XD :) :D
-            //vercnel userFrom ic
-            //tal userTO in
-            //grel etqan@ transactions um
             if(amount > balanceCheck(userFrom)) {
-                System.out.println("PARTQ MNAL CHKA XD");
+                System.out.println("PARTQ MNAL CHKA!");
                 return;
+            } else {
+                try {
+                    String takeFromQuery = "UPDATE users SET balance = (balance - ?) where id = ?;";
+                    String giveToQuery = "UPDATE users SET balance = (balance + ?) where id = ?;";
+                    String writeTransactionQuery = "INSERT INTO transactions (user_from, user_to,transaction_amount) VALUES (?,?,?);";
+
+                    PreparedStatement statement = connection.prepareStatement(takeFromQuery);
+                    statement.setDouble(1,amount);
+                    statement.setInt(2,userFrom);
+                    statement.execute();
+
+                    statement = connection.prepareStatement(giveToQuery);
+                    statement.setDouble(1,amount);
+                    statement.setInt(2,userTo);
+                    statement.execute();
+
+                    statement = connection.prepareStatement(writeTransactionQuery);
+                    statement.setInt(1,userFrom);
+                    statement.setInt(2,userTo);
+                    statement.setDouble(3,amount);
+
+                    System.out.println("Transaction successfully accepted");
+
+                }catch(SQLException e) {
+                    e.printStackTrace();
+                }
+
             }
-
-            String takeFromQuery = MessageFormat.format(
-                    "UPDATE users SET balance = (balance - {0}) where id = {1};",amount,userFrom);
-            String giveToQuery = MessageFormat.format (
-                    "UPDATE users SET balance = (balance + {0}) where id = {1};",amount,userTo);
-            String writeTransactionQuery = MessageFormat.format(
-                    "INSERT INTO transactions (user_from,user_to, transaction_amount) VALUES ({0},{1},{2});",userFrom,userTo,amount);
-            System.out.println(takeFromQuery);
-            System.out.println(giveToQuery);
-            System.out.println(writeTransactionQuery);
-
-            try {
-                Statement statement = connection.createStatement();
-                statement.execute(takeFromQuery);
-                statement.execute(giveToQuery);
-                statement.execute(writeTransactionQuery);
-
-
-            } catch (SQLException e){
-                e.printStackTrace();
-            }
-
-        }
-        else System.out.println("Uncorrecd id");;
+        } else System.out.println("Uncorrect id");
 
     }
 
@@ -176,9 +224,9 @@ public class DbHelper {
     }
 
     /**
-     * checks if id exists, continue operation
+     * checking, if id exists, continue operation
      * @param id source id
-     * @return
+     * @return true, if id exists, or false...
      */
     static boolean idCheck(int id) {
 
@@ -201,11 +249,11 @@ public class DbHelper {
     static double balanceCheck(int id) {
         if(idCheck(id)) {
             try {
-                String getIdListQuery = "SELECT balance FROM users WHERE id = ?; ";
-                PreparedStatement statement = connection.prepareStatement(getIdListQuery);
+                String getBalanceQuery = "SELECT balance FROM users WHERE id =?;";
+                PreparedStatement statement = connection.prepareStatement(getBalanceQuery);
                 statement.setInt(1,id);
 
-                ResultSet resultSet = statement.executeQuery(getIdListQuery);
+                ResultSet resultSet = statement.executeQuery();
                 resultSet.next();
                 double balance = resultSet.getDouble(1) ;
                 return balance;
@@ -213,7 +261,9 @@ public class DbHelper {
                 e.printStackTrace();
                 return -1;
             }
-        } else return -1;
+        } else System.out.println("Uncorrect id");
+        return -1;
+
 
     }
 }
