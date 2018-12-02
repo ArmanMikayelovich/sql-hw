@@ -36,13 +36,15 @@ public class DbHelper {
      */
     static int createUser(String firstName, String lastName) {
 
-        String createUserQuery = MessageFormat.format("insert into users (first_name, last_name) VALUES ( ''{0}'', ''{1}'');",firstName,lastName);
+        String createUserQuery = "insert into users (first_name, last_name) VALUES ( ?, ?);";
         try {
-            Statement statement = connection.createStatement();
-            statement.execute(createUserQuery);
+            PreparedStatement statement = connection.prepareStatement(createUserQuery);
+            statement.setString(1,firstName);
+            statement.setString(2,lastName);
+            statement.execute();
             String getIdQuery = "SELECT MAX(id) FROM users";
 
-            statement = connection.createStatement();
+            statement = connection.prepareStatement(getIdQuery);
             ResultSet resultSet = statement.executeQuery(getIdQuery);
 
             resultSet.next();
@@ -199,8 +201,10 @@ public class DbHelper {
     static double balanceCheck(int id) {
         if(idCheck(id)) {
             try {
-                Statement statement = connection.createStatement();
-                String getIdListQuery = "SELECT balance FROM users WHERE id = " + id + ";";
+                String getIdListQuery = "SELECT balance FROM users WHERE id = ?; ";
+                PreparedStatement statement = connection.prepareStatement(getIdListQuery);
+                statement.setInt(1,id);
+
                 ResultSet resultSet = statement.executeQuery(getIdListQuery);
                 resultSet.next();
                 double balance = resultSet.getDouble(1) ;
